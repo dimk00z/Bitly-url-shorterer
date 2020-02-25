@@ -1,2 +1,2 @@
 python-dotenv==0.9.1
-requests
+requests==2.23.0

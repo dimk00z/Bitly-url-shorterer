@@ -5,14 +5,12 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 
-ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
-HEADERS = {'Authorization': f'Bearer {ACCESS_TOKEN}'}
-
-
 def shorten_link(token, url):
     data = {"long_url": url}
     bitly_url = 'https://api-ssl.bitly.com/v4/shorten'
-    answer = requests.post(bitly_url, json=data, headers=HEADERS)
+    answer = requests.post(bitly_url,
+                           json=data,
+                           headers={'Authorization': f'Bearer {token}'})
     answer.raise_for_status()
     return answer.json().get('link')
 
@@ -20,7 +18,9 @@ def shorten_link(token, url):
 def count_clicks(token, bitlink):
     data = {'unit': 'day', 'units': -1}
     bitly_url = f'https://api-ssl.bitly.com/v4/bitlinks/{bitlink}/clicks/summary'
-    response = requests.get(bitly_url, params=data, headers=HEADERS)
+    response = requests.get(bitly_url,
+                            params=data,
+                            headers={'Authorization': f'Bearer {token}'})
     response.raise_for_status()
     return response.json()['total_clicks']
 
@@ -41,18 +41,18 @@ def read_links_from_args():
 
 def main():
     urls = read_links_from_args()
-    ACCESS_TOKEN = get_access_token()
+    access_token = get_access_token()
     for url in urls:
         if url.startswith('bit.ly') or url.startswith('http://bit.ly'):
             try:
                 bitlink = url.replace('http://', '')
-                total_clicks = count_clicks(ACCESS_TOKEN, bitlink)
+                total_clicks = count_clicks(access_token, bitlink)
                 print(f'Total clicks for {url} : {total_clicks}')
             except requests.exceptions.HTTPError:
                 print("Can't get count for bitlink")
         else:
             try:
-                bitlink = shorten_link(ACCESS_TOKEN, url)
+                bitlink = shorten_link(access_token, url)
                 print(f'Your bitlink for {url} : {bitlink}')
             except requests.exceptions.HTTPError:
                 print("Can't get a bitlink")
